@@ -163,16 +163,13 @@ class GaussF_KL1D(object):
     
     # methods of the class
     def Gfield(self):
-        if self.method == "circembed":
-            pass # Need to write this part.
-        else:
-            Z = np.random.randn(self.N, self.samples) # simulate standard normal
-            X = np.zeros((self.M, self.samples)) # preallocate the sample array
-            phi, L = self._eigens()
-            for k in range(self.samples):
-                for i in range(self.N):
-                    X[:, k] += Z[i, k] * np.sqrt(L[i]) * phi[:, i] # Karhunen-Loeve expansion
-            return X
+        Z = np.random.randn(self.N, self.samples) # simulate standard normal
+        X = np.zeros((self.M, self.samples)) # preallocate the sample array
+        phi, L = self._eigens()
+        for k in range(self.samples):
+            for i in range(self.N):
+                X[:, k] += Z[i, k] * np.sqrt(L[i]) * phi[:, i] # Karhunen-Loeve expansion
+        return X
         
     def eigens(self):
         if self.method == "KL_gaussleg":
@@ -184,7 +181,8 @@ class GaussF_KL1D(object):
             W, W_inv = self._weight() # weights matrix and its sqrt inverse
             
         # Construct covariance matrix
-        x1, x2 = np.meshgrid(x[: self.M], x[: self.M])
+        #x1, x2 = np.meshgrid(x[: self.M], x[: self.M])
+        x1, x2 = np.meshgrid(x, x)
         C = self.Cov(x1, x2) # covariance matrix.
         B = np.dot(np.dot(np.sqrt(W), C), np.sqrt(W)) # symmetric B matrix
         
@@ -200,7 +198,8 @@ class GaussF_KL1D(object):
 
     def _eolegrid(self):
         # get the grid associated with an EOLE simulation
-        return np.linspace(self.a, self.b, self.M + 1)
+        #return np.linspace(self.a, self.b, self.M + 1)
+        return np.linspace(self.a, self.b, self.M, endpoint = False)
     
     def _gaussleggrid(self):
         # get the grid associated with the Gauss-legendre simulation
@@ -209,7 +208,7 @@ class GaussF_KL1D(object):
     
     def grid(self):
         # get the grid of the random field/ stochastic process
-        if method == "KL_gaussleg":
+        if self.method == "KL_gaussleg":
             return self.grid()[0] # return just the grid of the gauss-Legendre points.
         return self._grid()
 
@@ -413,8 +412,8 @@ class GaussF_KL2D(object):
         else:
             x, y = self._grid()
             W, W_inv = self._eoleweights()
-            xx = np.hstack([np.repeat(x[: self.n], self.m).reshape( self.n * self.m, 1),
-                            np.tile(y[: self.m], self.n).reshape(self.n * self.m, 1)])            
+            xx = np.hstack([np.repeat(x, self.m).reshape( self.n * self.m, 1),
+                            np.tile(y, self.n).reshape(self.n * self.m, 1)])            
         # Construct covariance matrix 
 
         xxx = np.hstack([np.repeat(xx, self.n * self.m, axis = 0),
@@ -435,8 +434,8 @@ class GaussF_KL2D(object):
                  np.sqrt(self.n * self.m/self.A) * np.eye(self.n * self.m) )
 
     def _eolegrid(self):
-        x1 = np.linspace(self.a, self.b , self.n + 1)
-        x2 = np.linspace(self.c, self.d, self.m + 1)
+        x1 = np.linspace(self.a, self.b , self.n, endpoint = False)
+        x2 = np.linspace(self.c, self.d, self.m, endpoint = False)
         return (x1, x2)
 
     def _gaussleggrid(self):
