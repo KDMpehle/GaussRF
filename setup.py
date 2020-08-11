@@ -7,9 +7,9 @@ setuptools.setup(
     version = "0.0.1",
     author = " K. Mpehle"
     author_email = "khaya.mpehle@gmail.com",
-    description = "Simulation of 1-D and 2-D rectangular random fields"
+    description = "Simulation of 1-D and 2-D rectangular random fields",
     long_description = long_description,
-    install_requires = ["numpy", "scipy"]
+    install_requires = ["numpy", "scipy"],
     long_description_content_type = "text/markdown",
     classifiers = [
         "Programming Language :: Python :: 3",
