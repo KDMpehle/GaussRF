@@ -11,6 +11,7 @@ setuptools.setup(
     long_description = long_description,
     install_requires = ["numpy", "scipy"],
     long_description_content_type = "text/markdown",
+    url = "https://github.com/GaussRF.git"
     classifiers = [
         "Programming Language :: Python :: 3",
         "Licence :: OSI :: MIT License",
