@@ -278,6 +278,7 @@ class GaussF_KL2D(object):
             + " y-points, and sample size "
             + str(self.samples)
             )
+    
     # do repr method
     def __repr__(self):
         # The Repr method.
@@ -297,6 +298,7 @@ class GaussF_KL2D(object):
             + '", samples = '
             + str(self.samples)
             + ")" )
+    
     # Variable setters and getters.
     @property
     def n(self):
@@ -400,6 +402,8 @@ class GaussF_KL2D(object):
             for k in range(self.samples):
                 for i in range(self.N):
                     X[:,:,k] += np.sqrt(L[i]) * Z[i,k] * phi[:,i].reshape(self.n, self.m)
+            if self.samples == 1:
+                return X[:,:,0] # return as a 2D array if there is only one sample asked for
             return X
         
     def eigens(self):
@@ -450,7 +454,7 @@ def GRfield_2D(N, n, m, lims, Cov, method = "KL_EOLE", samples = 1):
     RF = GaussF_KL2D(N, n, m, lims, Cov, method, samples)
     return RF.Gfield()
 
-def grid_2D(n, m, lims, method):
+def grid_2D(n, m, lims, method= "KL_EOLE"):
     # Get the coordinates
     a, b, c, d = lims
     if method == "KL_gaussleg":
@@ -461,8 +465,8 @@ def grid_2D(n, m, lims, method):
         y = (d - c) * zeta / 2 + (d + c) / 2
     else:
         # so far the other methods assume uniform grids 
-        x = np.linspace(a, b, n + 1)
-        y = np.linspace(c, d, m + 1)
+        x = np.linspace(a, b, n, endpoint = False)
+        y = np.linspace(c, d, m, endpoint = False)
 
     return np.meshgrid(x, y)
         
