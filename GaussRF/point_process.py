@@ -129,23 +129,28 @@ class PoissF_2D(object):
         #    indices = np.where( np.random.random(N[k]) < self.lamb(x_points[:,0], x_points[:,1]))/lamb_star)[0]
         #    points_sample[k] = x_points[indices,:] # added the thinned process to the sample
         #return points_sample # have to test this out in a simpler script
-    
-#Do a test
-def lamb(x,y):
-    return 300 * ( x**2 + y**2 )
-lims = [0., 1., 0., 1.]
-points = PoissF_2D(lims, lamb).Poi_field()
 
-import matplotlib.pyplot as plt
-from matplotlib import cm
-plt.plot(points[:,0], points[:,1], 'o')
-plt.xlabel('x')
-plt.ylabel('y')
-plt.title(r'Poisson process with intensity $\lambda(x,y)$')
+#Execution guard
+
+if __name__ == "__main__":
+
+    pass
+#Do a test
+#def lamb(x,y):
+#    return 300 * ( x**2 + y**2 )
+#lims = [0., 1., 0., 1.]
+#points = PoissF_2D(lims, lamb).Poi_field()
+
+#import matplotlib.pyplot as plt
+#from matplotlib import cm
+#plt.plot(points[:,0], points[:,1], 'o')
+#plt.xlabel('x')
+#plt.ylabel('y')
+#plt.title(r'Poisson process with intensity $\lambda(x,y)$')
 # make a heat map of the intensity function
-xx, yy = np.meshgrid(np.linspace(0., 1., 100), np.linspace(0., 1., 100))
-L = lamb(xx, yy)
-plt.pcolor(xx, yy, L, cmap = cm.gray)
-plt.colorbar()
-plt.savefig('Poi_inhomog_eg.pdf')
-plt.show()
+#xx, yy = np.meshgrid(np.linspace(0., 1., 100), np.linspace(0., 1., 100))
+#L = lamb(xx, yy)
+#plt.pcolor(xx, yy, L, cmap = cm.gray)
+#plt.colorbar()
+#plt.savefig('Poi_inhomog_eg.pdf')
+#plt.show()
