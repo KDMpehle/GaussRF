@@ -1,15 +1,171 @@
-"""Generate point process fields in two dimensions"""
+"""Generate point process fields"""
 import warnings, inspect
 import numpy as np
 from scipy.optimize import fmin_tnc
-from scipy.integrate import dblquad
 
+class PoissHF_2D(object):
+    """ The clas for a two-dimensional homogeneous Poisson process
+
+    The field is instantiated with domain end points
+    lims = [a, b, c, d] = [a, b] x [c, d]
+    and intensity lamb (a positive number)
+    """
+
+    def __init__(self, lims, lamb):
+        #instantiate the 2D Poisson field
+        self.lims = lims
+        self.a, self.b = lims[0:2] #get the horizontal limits
+        self.c, self.d = lims[2:4] #get the vertical limits
+        self.A = (self.b - self.a) * (self.d - self.c) #area of the rectangular domain
+        self.lamb = lamb
+
+    def __str__(self):
+        #The str method
+        return (
+            "2D Poisson homogeneous random field on ["
+            + str(self.a)
+            + ", "
+            + str(self.b)
+            + "] x ["
+            + str(self.c)
+            + ", "
+            + str(self.d)
+            + "] with intensity "
+            + str(self.lamb)
+            )
+
+    def __repr__(self):
+        #The repr method
+        return (
+            "PoissHF_2D(lims = "
+            + str(self.lims)
+            + ", lamb = "
+            + str(self.lamb)
+            + ")"
+            )
+    
+    #Variable setters and getters
+    @property
+    def lims(self):
+        #get the domain limits
+        return self._lims
+
+    @lims.setter
+    def lims(self, value):
+        if not isinstance(value, list):
+            raise TypeError("Limits must be provided as a list")
+        elif len(value) != 4:
+            raise TypeError("Must provide 4 numbers for the limits")
+        elif not ( all( isinstance(x, (int,float)) for x in value) and not any(isinstance(x, bool) for x in value) ):
+            raise ValueError("Interval end points must be real numbers")
+        elif (value[1] <= value[0]) or (value[3] <= value[2]):
+            raise ValueError("Error in limits, a < b and c < d for rectangle [a,b] x [c,d]")
+        self._lims = value
+        self.a, self.b = self.lims[0:2]
+        self.c, self.d = self.lims[2:4]
+        self.A = (self.b - self.a) * (self.d - self.c)
+
+    @property
+    def lamb(self):
+        #Get the constant intensity
+        return self._lamb
+
+    @lamb.setter
+    def lamb(self, value):
+        if not (isinstance(value, (int, float)) and not isinstance(value, bool)) or value <= 0:
+            raise TypeError("Homogeneous intensity must be a positive real number")
+        self._lamb = value
+
+    #Methods of the class
+    def realisation(self):
+        #Generate the number of points in the process
+        N = np.random.poisson( self.A * self.lamb) #Number of points
+        points = np.random.random((N, 2)) #initialise the points
+        
+        #translate the points to specified domain
+        points[:,0] = points[:,0] * (self.b - self.a) + self.a
+        points[:,1] = points[:,1] * (self.d - self.c) + self.c
+
+        return points
+        
+class PoissHF_disk(object):
+    """The class for a two-dimensional homogeneous Poisson process on a circular disk
+
+    The field is instantiated with disk radius R and intesnity lamb
+    """
+
+    def __init__(self, R, lamb):
+        #instantiate the 2D Poisson field on the disk
+        self.R = R #Get the domain radius
+        self.lamb = lamb
+        self.A = np.pi * self.R**2 #area of the domain
+
+    #Do the str method
+    def __str__(self):
+        #The str method
+        return (
+            "2D Poisson random field on the disk of radius"
+            + str(self.R)
+            + " and intensity "
+            +str(self.lamb)
+            )
+
+    def __repr__(self):
+        #The repr method.
+        return (
+            "PoissH_disk(R = "
+            + str(self.R)
+            + ", lamb = "
+            + str(self.lamb)
+            + ")" )
+    
+    #Variable getters and setters
+    @property
+    def R(self):
+        #Get the radius of the disk
+        return self._R
+
+    @R.setter
+    def R(self, value):
+        if not (isinstance(value, (int, float)) and not isinstance(value, bool)) or value <= 0:
+            raise TypeError("Homogeneous intensity must be a positive real number")
+        self._R = value
+    
+    @property
+    def lamb(self):
+        #Get the constant intensity
+        return self._lamb
+
+    @lamb.setter
+    def lamb(self, value):
+        if not (isinstance(value, (int, float)) and not isinstance(value, bool)) or value <= 0:
+            raise TypeError("Homogeneous intensity must be a positive real number")
+        self._lamb = value
+        
+    #Methods
+    def realisation(self):
+        #Generate the number of points in the process
+        N = np.random.poisson(self.A * self.lamb) # number of points
+        polar_pts = np.random.random((N,2)) # generate uniform random variables to be manipulated
+        points = np.zeros((N,2))
+
+        #Transform to polar coordinates 0 < r < R, 0 < theta < 2pi
+        polar_pts[:, 0] = self.R * np.sqrt(polar_pts[:,0])
+        polar_pts[:, 1] = 2 * np.pi * polar_pts[:, 1]
+        
+        #Convert to Cartesian coordinates
+        points[:, 0] = polar_pts[:,0] * np.cos(polar_pts[:, 1])
+        points[:, 1] = polar_pts[:,0] * np.sin(polar_pts[:, 1])
+
+        return points
+        
+    
 class PoissF_2D(object):
-    """The class for a two-dimensional Poisson process
+    """The class for a two-dimensional inhomogeneous Poisson process
 
     The field is instantiated with domain end points
     lims = [a, b, c, d]= [a, b] x [c, d]
-    and intensity lamb (a function or number)
+    and intensity function lamb
     """
 
     def __init__(self, lims, lamb, lamb_max = None):
@@ -110,7 +266,7 @@ class PoissF_2D(object):
         x_max = fmin_tnc(func, x0, approx_grad = True, bounds = boundary)[0] # return the point of maximum value
         return self.lamb(x_max[0], x_max[1]) # return threshold lambda_max for the thinning process
 
-    def Poi_field(self):
+    def realisation(self):
         #Return a sample of the Poisson process: thinning procedure
         lamb_star = self._threshold() # get the thinning lambda rate
         print(lamb_star)
@@ -122,6 +278,7 @@ class PoissF_2D(object):
         # Thin the process
         indices = np.where(np.random.random(N) < self.lamb(x_pts[:,0], x_pts[:,1])/lamb_star)[0]
         return x_pts[indices, :]
+    
         #for k in range(self.samples):
         #    x_points = np.random.random(N[k], 2) # uniform
         #    x_points[:,0] = self.a + (self.b - self.a) * x_points[:,0] # translate x-coordiantes from (0,1) to (a,b)
