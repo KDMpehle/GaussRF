@@ -113,7 +113,7 @@ class PoissHF_disk(object):
     def __repr__(self):
         #The repr method.
         return (
-            "PoissH_disk(R = "
+            "PoissHF_disk(R = "
             + str(self.R)
             + ", lamb = "
             + str(self.lamb)
@@ -158,8 +158,79 @@ class PoissHF_disk(object):
         points[:, 1] = polar_pts[:,0] * np.sin(polar_pts[:, 1])
 
         return points
-        
+class PoissHF_sphere(object):
+    """ The class for an homogeneous Poisson process on the sphere
+
+    The field is instantiated with sphere radius R and
+    intensity lamb
+
+    """
+
+    def __init__(self, R, lamb):
+        #Instantiate the Poisson field on the sphere
+        self.R = R
+        self.lamb = lamb
+        self.S = 4 * np.pi * self.R**2
+
+    #Do the str method
+    def __str__(self):
+        #The str method
+        return (
+            "Poisson random field on the sphere of radius"
+            + str(self.R)
+            + " and intensity "
+            +str(self.lamb)
+            )
+
+    def __repr__(self):
+        #The repr method.
+        return (
+            "PoissHF_sphere(R = "
+            + str(self.R)
+            + ", lamb = "
+            + str(self.lamb)
+            + ")" )
     
+    #Variable getters and setters
+    @property
+    def R(self):
+        #Get the radius of the disk
+        return self._R
+
+    @R.setter
+    def R(self, value):
+        if not (isinstance(value, (int, float)) and not isinstance(value, bool)) or value <= 0:
+            raise TypeError("Homogeneous intensity must be a positive real number")
+        self._R = value
+    
+    @property
+    def lamb(self):
+        #Get the constant intensity
+        return self._lamb
+
+    @lamb.setter
+    def lamb(self, value):
+        if not (isinstance(value, (int, float)) and not isinstance(value, bool)) or value <= 0:
+            raise TypeError("Homogeneous intensity must be a positive real number")
+        self._lamb = value
+
+    #Methods
+    def realisation(self):
+        #Generate number of points in the process
+        N = np.random.poisson(self.S * self.lamb) # number of points in realisation
+        angles = np.random.random((N, 2)) # to be transformed to uniform (theta, phi)
+        points = np.zeros((N,3)) #preallocate the cartesian coordinates array
+
+        #Transform the uniform (0,1) points to angular coordinates
+        angles[:, 0] = np.arccos(2 * angles[:, 0] - 1)
+        angles[:, 1] = 2 * np.pi * angles[:, 1]
+
+        #Convert to Cartesian coordinates
+        points[:, 0] = self.R * np.sin(angles[:, 0]) * np.cos(angles[:, 1])
+        points[:, 1] = self.R * np.sin(angles[:, 0]) * np.sin(angles[:, 1])
+        points[:, 2] = self.R * np.cos(angles[:, 0])
+
+        return points
 class PoissF_2D(object):
     """The class for a two-dimensional inhomogeneous Poisson process
 
